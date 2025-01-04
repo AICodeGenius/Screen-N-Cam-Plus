@@ -61,7 +61,10 @@ class CameraConfig:
 
     def toggle_flip(self):
         self.flip_camera = not self.flip_camera
-    
+
+    def set_fps(self, fps:int):
+        self.fps = fps
+        
     def set_resolution(self, resolution:tuple[int,int]):
         self.frame_width = resolution[0]
         self.frame_height = resolution[1]

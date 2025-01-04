@@ -1,22 +1,33 @@
-from queue import SimpleQueue
-from typing import Any
+from feed_provider import FeedProvider
+from ai_camera import AICamera
+import numpy as np
 
-class CameraFeed(SimpleQueue):
-    def __init__(self):
+class CameraFeed(FeedProvider):
+    def __init__(self, camera:AICamera):
         super().__init__()
-        self._shared = False
-
-    def share(self):
-        self._shared = True
-
-    def unshare(self):
-        self._shared = False
-
-    def is_shared(self):
-        return self._shared
+        self.camera = camera
+        if self.camera is None:
+            raise ValueError("Camera not initialized")
+        #self.camera.start_stream(self)
     
-    # def put(self, item: Any, block: bool = True, timeout: float | None = None) -> None:
-    #     print("Putting item in shared store")
-    #     return super().put(item, block, timeout)
-
+    def start_stream(self):
+        self.camera.start_stream(self)
+        return self
     
+    def get(self):
+        frame = super().get()
+        if frame is None:
+            frame = np.zeros((480, 640, 3), dtype=np.uint8)
+        return self.camera.is_streaming(),frame
+    
+    def __del__(self):
+        self.camera.stop_stream()
+        self.camera.camera.release()
+
+    def __enter__(self):
+        self.camera.start_stream(self)
+        return self
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.camera.stop_stream()
+        self.camera.camera.release()
